@@ -1,1 +1,5 @@
-avr-gcc -g -Os -mmcu=atmega328p -c atmega-two-7-segment-counter.c && avr-gcc -g -mmcu=atmega328p -o atmega-two-7-segment-counter.elf atmega-two-7-segment-counter.o && avr-objcopy -j .text -j .data -O ihex atmega-two-7-segment-counter.elf atmega-two-7-segment-counter.hex && avr-objcopy -j .eeprom --change-section-lma .eeprom=0 -O ihex atmega-two-7-segment-counter.elf atmega-two-7-segment-counter_eeprom.hex && avrdude -p m328p -c usbasp-clone -U flash:w:atmega-two-7-segment-counter.hex -U eeprom:w:atmega-two-7-segment-counter_eeprom.hex
+avr-gcc -g -Os -mmcu=atmega328p -c atmega-two-7-segment-counter.c && \
+	avr-gcc -g -mmcu=atmega328p -o atmega-two-7-segment-counter.elf atmega-two-7-segment-counter.o && \
+	avr-objcopy -j .text -j .data -O ihex atmega-two-7-segment-counter.elf atmega-two-7-segment-counter.hex && \
+	avr-objcopy -j .eeprom --change-section-lma .eeprom=0 -O ihex atmega-two-7-segment-counter.elf atmega-two-7-segment-counter_eeprom.hex && \
+	avrdude -p m328p -c usbasp-clone -U flash:w:atmega-two-7-segment-counter.hex -U eeprom:w:atmega-two-7-segment-counter_eeprom.hex
