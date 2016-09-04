@@ -1,38 +1,42 @@
 #define F_CPU 20000000UL
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <avr/eeprom.h>
 #include <util/delay.h>
 #include <stdint.h>
 
-volatile int units = 0;
-volatile int decimals = 0;
-volatile int number = 0;
+int8_t EEMEM number = 0;
+
+//volatile int8_t units = 0;
+//volatile int8_t decimals = 0;
 
 //Interrupt Service Routine for INT0
 ISR(INT0_vect) {
 //  increase value +1;
-//    PORTD &= ~(1<<PORTD0);
   cli();
-  number++;
-  if (number > 99){
-    number = 0;
+  int8_t number_int0 = eeprom_read_byte(&number);
+  number_int0++;
+  if (number_int0 > 99){
+    number_int0 = 0;
   }
+  eeprom_update_byte (&number,number_int0);
   sei();
 }
 
 //Interrupt Service Routine for INT0
 ISR(INT1_vect) {
 //  decrease value -1;
-//  PORTD |= (1<<PORTD0);
+  int8_t number_int1 = eeprom_read_byte(&number);
   cli();
-  number--;
-  if (number < 0){
-    number = 99;
+  number_int1--;
+  if (number_int1 < 0){
+    number_int1 = 99;
   }
+  eeprom_update_byte (&number,number_int1);
   sei();
 }
 
-void display_digit(int digit);
+void display_digit(int8_t digit);
 
 int main(void) {
 
@@ -46,10 +50,10 @@ int main(void) {
 //  PORTD = ~(1<<PORTD0); // set 2nd 7segment at ON (other should be OFF)
 //  PORTD |= (1<<PORTD0); // set First 7segment at ON (other should be OFF)
 
-  int toggle = 0;
+  uint8_t toggle = 0;
 
-  decimals = 0;
-  units = 0;
+  int8_t decimals = 0;
+  int8_t units = 0;
 
   EICRA |= (1 << ISC00) | (1 << ISC01) | (1 << ISC11) | (1 << ISC10);    // set INT0 to trigger on ANY logic change
   EIMSK |= (1 << INT0) | (1 << INT1);     // Turns on INT0
@@ -61,14 +65,16 @@ int main(void) {
   while(1){
     if (TCNT1 >= 20000){
       if (toggle == 0){ // left display (decimals)
+        int8_t number_decimals = eeprom_read_byte(&number);
+        decimals = number_decimals / 10;
         PORTD |= (1<<PORTD0);
-        decimals = number / 10;
         display_digit(decimals);
         toggle = 1;
         TCNT1 = 0;
       }else{ // right display (units)
+        int8_t number_units = eeprom_read_byte(&number);
+        units = number_units % 10;
         PORTD &= ~(1<<PORTD0);
-        units = number % 10;
         display_digit(units);
         toggle = 0;
         TCNT1 = 0;
@@ -78,26 +84,26 @@ int main(void) {
   return 0;
 }
 
-void display_digit(int digit){
+void display_digit(int8_t digit){
   switch(digit){
     case 0:
-      PORTC = 0b00111111;		// Display Number 0
+      PORTC = 0b00111111;   // Display Number 0
       PORTB = 0b00000000;
       break;
     case 1:
-      PORTC = 0b00000110;		// Display Number 1
+      PORTC = 0b00000110;   // Display Number 1
       PORTB = 0b00000000;
       break;
     case 2:
-      PORTC = 0b00011011;		// Display Number 2
+      PORTC = 0b00011011;   // Display Number 2
       PORTB = 0b00000010;
       break;
     case 3:
-      PORTC = 0b00001111;		// Display Number 3
+      PORTC = 0b00001111;   // Display Number 3
       PORTB = 0b00000010;
       break;
     case 4:
-      PORTC = 0b00100110;		// Display Number 4
+      PORTC = 0b00100110;   // Display Number 4
       PORTB = 0b00000010;
       break;
     case 5:
@@ -121,8 +127,9 @@ void display_digit(int digit){
       PORTB = 0b00000010;
       break;
     default:
-      PORTC = 0b00111111;		// Display Number 8
+      PORTC = 0b00111111;   // Display Number 8
       PORTB = 0b00000010;
       break;
   }
 }
+
