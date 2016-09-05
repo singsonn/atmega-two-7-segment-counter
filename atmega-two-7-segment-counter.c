@@ -26,8 +26,8 @@ ISR(INT0_vect) {
 //Interrupt Service Routine for INT0
 ISR(INT1_vect) {
 //  decrease value -1;
-  int8_t number_int1 = eeprom_read_byte(&number);
   cli();
+  int8_t number_int1 = eeprom_read_byte(&number);
   number_int1--;
   if (number_int1 < 0){
     number_int1 = 99;
@@ -55,8 +55,8 @@ int main(void) {
   int8_t decimals = 0;
   int8_t units = 0;
 
-  EICRA |= (1 << ISC00) | (1 << ISC01) | (1 << ISC11) | (1 << ISC10);    // set INT0 to trigger on ANY logic change
-  EIMSK |= (1 << INT0) | (1 << INT1);     // Turns on INT0
+  EICRA |= (1 << ISC00) | (1 << ISC01) | (1 << ISC11) | (1 << ISC10);    // set INT0 to trigger on RISING EDGE logic change
+  EIMSK |= (1 << INT0) | (1 << INT1);     // Turns on INT0 & INT1
 
   TCCR1B |= (1 << CS11); // Set up timer with prescaler Fcpu/8
 
@@ -132,4 +132,3 @@ void display_digit(int8_t digit){
       break;
   }
 }
-
