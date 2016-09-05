@@ -8,7 +8,7 @@
 int8_t EEMEM number = 0;
 
 //volatile int8_t units = 0;
-//volatile int8_t decimals = 0;
+volatile int8_t changed_timer = 0;
 
 //Interrupt Service Routine for INT0
 ISR(INT0_vect) {
@@ -20,10 +20,11 @@ ISR(INT0_vect) {
     number_int0 = 0;
   }
   eeprom_update_byte (&number,number_int0);
+  changed_timer = 0;
   sei();
 }
 
-//Interrupt Service Routine for INT0
+//Interrupt Service Routine for INT1
 ISR(INT1_vect) {
 //  decrease value -1;
   cli();
@@ -33,24 +34,27 @@ ISR(INT1_vect) {
     number_int1 = 99;
   }
   eeprom_update_byte (&number,number_int1);
+  changed_timer = 0;
   sei();
 }
 
 void display_digit(int8_t digit);
+void display_segment(int8_t segment);
 
 int main(void) {
 
   DDRB = (1<<DDB1); // Set portB1 as output for g of 7 segment
   DDRC = 0b00111111; // Set PortC0-5 as output for a,b,c,d,e,f of 7 segment
   DDRD = (1<<DDD0); // Set dual 7 segment toggle pin as output pin
+  DDRD &= ~(1<<PD4); // Set PD4 as input
+  PORTD &= ~(1<<PD4);
 
   PORTC = 0b00000000; // Initialize PORTC at 0 (no led ON)
   PORTB = 0b00000000; // Initialize PORTB at 0 (no led ON)
 
-//  PORTD = ~(1<<PORTD0); // set 2nd 7segment at ON (other should be OFF)
-//  PORTD |= (1<<PORTD0); // set First 7segment at ON (other should be OFF)
-
   uint8_t toggle = 0;
+  int16_t circle_delay =0;
+  int8_t segment_loop = 0;
 
   int8_t decimals = 0;
   int8_t units = 0;
@@ -64,23 +68,52 @@ int main(void) {
 
   while(1){
     if (TCNT1 >= 20000){
-      if (toggle == 0){ // left display (decimals)
-        int8_t number_decimals = eeprom_read_byte(&number);
-        decimals = number_decimals / 10;
-        PORTD |= (1<<PORTD0);
-        display_digit(decimals);
-        toggle = 1;
-        TCNT1 = 0;
-      }else{ // right display (units)
-        int8_t number_units = eeprom_read_byte(&number);
-        units = number_units % 10;
-        PORTD &= ~(1<<PORTD0);
-        display_digit(units);
-        toggle = 0;
-        TCNT1 = 0;
+      if (PIND & (1 << PD4)){
+        //display_segment(6);
+        //_delay_ms(1000);
+        eeprom_update_byte (&number,0);
+      }
+      if (changed_timer <= 120){
+        if (toggle == 0){ // left display (decimals)
+          int8_t number_decimals = eeprom_read_byte(&number);
+          decimals = number_decimals / 10;
+          PORTD |= (1<<PORTD0);
+          display_digit(decimals);
+          toggle = 1;
+          TCNT1 = 0;
+          changed_timer++;
+        }else{ // right display (units)
+          int8_t number_units = eeprom_read_byte(&number);
+          units = number_units % 10;
+          PORTD &= ~(1<<PORTD0);
+          display_digit(units);
+          toggle = 0;
+          TCNT1 = 0;
+          changed_timer++;
+        }
+      }else{
+        if (toggle == 0){
+          if (circle_delay <= 29250){
+            circle_delay++;
+          }else{
+            if (segment_loop < 5){
+              segment_loop++;
+            }else{
+              segment_loop = 0;
+            }
+          circle_delay = 0;
+          }
+          display_segment(segment_loop);
+          PORTD |= (1<<PORTD0);
+          toggle = 1;
+        }else{
+          PORTD &= ~(1<<PORTD0);
+          toggle = 0;
+        }
       }
     }
   }
+
   return 0;
 }
 
@@ -128,6 +161,43 @@ void display_digit(int8_t digit){
       break;
     default:
       PORTC = 0b00111111;   // Display Number 8
+      PORTB = 0b00000010;
+      break;
+  }
+}
+
+void display_segment(int8_t segment){
+  switch(segment){
+    case 0:
+      PORTC = 0b00000001;   // Display Number a
+      PORTB = 0b00000000;
+      break;
+    case 1:
+      PORTC = 0b00000010;   // Display Number b
+      PORTB = 0b00000000;
+      break;
+    case 2:
+      PORTC = 0b00000100;   // Display Number c
+      PORTB = 0b00000000;
+      break;
+    case 3:
+      PORTC = 0b00001000;   // Display Number d
+      PORTB = 0b00000000;
+      break;
+    case 4:
+      PORTC = 0b00010000;   // Display Number e
+      PORTB = 0b00000000;
+      break;
+    case 5:
+      PORTC = 0b00100000;   // Display Number f
+      PORTB = 0b00000000;
+      break;
+    case 6:
+      PORTC = 0b00000000;   // Display Number g
+      PORTB = 0b00000010;
+      break;
+    default:
+      PORTC = 0b00000000;   // Display Number g
       PORTB = 0b00000010;
       break;
   }
