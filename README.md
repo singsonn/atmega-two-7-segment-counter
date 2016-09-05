@@ -1,6 +1,6 @@
 # atmega-two-7-segment-counter
 
-Code for a 0 to 99 counter using an Atmega328p and 2 7-segment displays, including push button to reset the counter, and push buttons to increment and decrement it.
+Code for a 0 to 99 counter using an Atmega328p and 2 7-segment displays, including push buttons to reset the counter, increment and decrement it.
 
 ## Deployment
 
