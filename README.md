@@ -1,6 +1,6 @@
 # 0 to 99 counter with Atmega328p and 7 segment displays
 
-Code for a 0 to 99 counter using an Atmega328p and 2 7-segment displays, including push buttons to reset the counter, increment and decrement it.
+Code for a 0 to 99 counter using an Atmega328p and two 7-segment displays, including push buttons to reset the counter, increment and decrement it.
 
 Check this video to see it in action: https://www.youtube.com/watch?v=xIt7RiY2nQ8
 
@@ -20,7 +20,7 @@ Parts needed:
 - 4x 2.2kΩ resistor
 - 4x 5.1kΩ resistor
 - 1x 20Mhz crystal
-- 2x 22pf eramic capacitor
+- 2x 22pf ceramic capacitor
 - 14x 1kΩ resistor
 - 1x 7805 voltage regulator
 - 2x 1uF electrolytic capacitor
