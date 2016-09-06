@@ -190,35 +190,35 @@ void display_digit(int8_t digit) {
 void display_segment(int8_t segment) {
   switch(segment){
     case 0:
-      PORTC = 0b00000001;   // Display Number a
+      PORTC = 0b00000001;   // Display segment a
       PORTB = 0b00000000;
       break;
     case 1:
-      PORTC = 0b00000010;   // Display Number b
+      PORTC = 0b00000010;   // Display segment b
       PORTB = 0b00000000;
       break;
     case 2:
-      PORTC = 0b00000100;   // Display Number c
+      PORTC = 0b00000100;   // Display segment c
       PORTB = 0b00000000;
       break;
     case 3:
-      PORTC = 0b00001000;   // Display Number d
+      PORTC = 0b00001000;   // Display segment d
       PORTB = 0b00000000;
       break;
     case 4:
-      PORTC = 0b00010000;   // Display Number e
+      PORTC = 0b00010000;   // Display segment e
       PORTB = 0b00000000;
       break;
     case 5:
-      PORTC = 0b00100000;   // Display Number f
+      PORTC = 0b00100000;   // Display segment f
       PORTB = 0b00000000;
       break;
     case 6:
-      PORTC = 0b00000000;   // Display Number g
+      PORTC = 0b00000000;   // Display segment g
       PORTB = 0b00000010;
       break;
     default:
-      PORTC = 0b00000000;   // Display Number g
+      PORTC = 0b00000000;   // Display segment g
       PORTB = 0b00000010;
       break;
   }
