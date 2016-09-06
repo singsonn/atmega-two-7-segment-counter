@@ -1,9 +1,14 @@
-#define F_CPU 20000000UL
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/eeprom.h>
 #include <util/delay.h>
 #include <stdint.h>
+
+#define F_CPU 20000000UL // speed on mcu crystal (20Mhz)
+
+//USART BAUD rate setup
+#define BAUD 9600                                   // define baud
+#define BAUDRATE ((F_CPU)/(BAUD*16UL)-1)            // set baud rate value for UBRR
 
 int8_t EEMEM number = 0;
 
@@ -40,12 +45,15 @@ ISR(INT1_vect) {
 
 void display_digit(int8_t digit);
 void display_segment(int8_t segment);
+void uart_init (void);
+void uart_transmit (uint8_t data);
+uint8_t uart_receive (void);
 
 int main(void) {
 
   DDRB = (1<<DDB1); // Set portB1 as output for g of 7 segment
   DDRC = 0b00111111; // Set PortC0-5 as output for a,b,c,d,e,f of 7 segment
-  DDRD = (1<<DDD0); // Set dual 7 segment toggle pin as output pin
+  DDRD = (1<<DDD7); // Set dual 7 segment toggle pin PORTD7 as output pin
   DDRD &= ~(1<<PD4); // Set PD4 as input
   PORTD &= ~(1<<PD4);
 
@@ -77,7 +85,7 @@ int main(void) {
         if (toggle == 0){ // left display (decimals)
           int8_t number_decimals = eeprom_read_byte(&number);
           decimals = number_decimals / 10;
-          PORTD |= (1<<PORTD0);
+          PORTD |= (1<<PORTD7);
           display_digit(decimals);
           toggle = 1;
           TCNT1 = 0;
@@ -85,7 +93,7 @@ int main(void) {
         }else{ // right display (units)
           int8_t number_units = eeprom_read_byte(&number);
           units = number_units % 10;
-          PORTD &= ~(1<<PORTD0);
+          PORTD &= ~(1<<PORTD7);
           display_digit(units);
           toggle = 0;
           TCNT1 = 0;
@@ -104,10 +112,10 @@ int main(void) {
           circle_delay = 0;
           }
           display_segment(segment_loop);
-          PORTD |= (1<<PORTD0);
+          PORTD |= (1<<PORTD7);
           toggle = 1;
         }else{
-          PORTD &= ~(1<<PORTD0);
+          PORTD &= ~(1<<PORTD7);
           toggle = 0;
         }
       }
@@ -117,7 +125,7 @@ int main(void) {
   return 0;
 }
 
-void display_digit(int8_t digit){
+void display_digit(int8_t digit) {
   switch(digit){
     case 0:
       PORTC = 0b00111111;   // Display Number 0
@@ -166,7 +174,7 @@ void display_digit(int8_t digit){
   }
 }
 
-void display_segment(int8_t segment){
+void display_segment(int8_t segment) {
   switch(segment){
     case 0:
       PORTC = 0b00000001;   // Display Number a
@@ -201,4 +209,24 @@ void display_segment(int8_t segment){
       PORTB = 0b00000010;
       break;
   }
+}
+
+// function to initialize UART
+void uart_init (void) {
+  UBRRH = (BAUDRATE>>8);                      // shift the register right by 8 bits
+  UBRRL = BAUDRATE;                           // set baud rate
+  UCSRB|= (1<<TXEN)|(1<<RXEN);                // enable receiver and transmitter
+  UCSRC|= (1<<URSEL)|(1<<UCSZ0)|(1<<UCSZ1);   // 8bit data format
+}
+
+// function to send data
+void uart_transmit (uint8_t data) {
+  while (!( UCSRA & (1<<UDRE)));                // wait while register is free
+  UDR = data;                                   // load data in the register
+}
+
+// function to receive data
+uint8_t uart_receive (void) {
+  while(!(UCSRA) & (1<<RXC));                   // wait while data is being received
+  return UDR;                                   // return 8-bit data
 }
