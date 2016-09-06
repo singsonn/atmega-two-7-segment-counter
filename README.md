@@ -20,7 +20,7 @@ Parts needed:
 - 4x 2.2kΩ resistor
 - 4x 5.1kΩ resistor
 - 1x 20Mhz crystal
-- 2x 22pf ceramic capacitor
+- 2x 22pF ceramic capacitor
 - 14x 1kΩ resistor
 - 1x 7805 voltage regulator
 - 2x 1µF electrolytic capacitor
@@ -33,7 +33,7 @@ Parts needed:
 
 All work was done on a Mac. Check here for easy steps to install `avr-gcc` and `avrdude` tools on your Mac: http://maxembedded.com/2015/06/setting-up-avr-gcc-toolchain-on-linux-and-mac-os-x/
 
-I deployed it using an USBASP ISP programmer. Check `file one-line-compile-program-OSX.txt` for one line command to compile and program it on your Atmega328p.
+I deployed it using a USBASP ISP programmer. Check `file one-line-compile-program-OSX.txt` for one line command to compile and program it on your Atmega328p.
 
 ## Authors
 
