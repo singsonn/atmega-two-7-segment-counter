@@ -45,6 +45,18 @@ ISR(INT1_vect) {
   sei();
 }
 
+ISR(PCINT2_vect) {
+  cli();
+  if( (PIND & (1 << PIND4)) == 1 ) {
+      eeprom_update_byte (&number,0);
+  }
+  else
+  {
+      /* HIGH to LOW pin change */
+  }
+  sei();
+}
+
 void display_digit(int8_t digit);
 void display_segment(int8_t segment);
 void uart_init (void);
@@ -57,7 +69,8 @@ int main(void) {
   DDRC = 0b00111111; // Set PortC0-5 as output for a,b,c,d,e,f of 7 segment
   DDRD = (1<<DDD7); // Set dual 7 segment toggle pin PORTD7 as output pin
   DDRD &= ~(1<<PD4); // Set PD4 as input
-  PORTD &= ~(1<<PD4);
+//  PORTD &= ~(1<<PD4);
+  PORTD |= (1<<PD4) // Enable pull-ups for PD4
 
   PORTC = 0b00000000; // Initialize PORTC at 0 (no led ON)
   PORTB = 0b00000000; // Initialize PORTB at 0 (no led ON)
@@ -72,17 +85,15 @@ int main(void) {
   EICRA |= (1 << ISC00) | (1 << ISC01) | (1 << ISC11) | (1 << ISC10);    // set INT0 to trigger on RISING EDGE logic change
   EIMSK |= (1 << INT0) | (1 << INT1);     // Turns on INT0 & INT1
 
+  PCICR |= (1<<PCIE2);   // set PCIE2 to enable PCMSK2 scan
+  PCMSK2 |= (1<<PCINT20); // set PCINT20 to trigger an interrupt on state change
+
   TCCR1B |= (1 << CS11); // Set up timer with prescaler Fcpu/8
 
   sei();				//Enable Global Interrupt
 
   while(1){
     if (TCNT1 >= 20000){
-      if (PIND & (1 << PD4)){
-        //display_segment(6);
-        //_delay_ms(1000);
-        eeprom_update_byte (&number,0);
-      }
       if (changed_timer <= 240){
         if (toggle == 0){ // left display (decimals)
           int8_t number_decimals = eeprom_read_byte(&number);
