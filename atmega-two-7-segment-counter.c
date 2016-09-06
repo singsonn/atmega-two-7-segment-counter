@@ -5,6 +5,8 @@
 #include <stdint.h>
 
 #define F_CPU 20000000UL // speed on mcu crystal (20Mhz)
+#define FREQ 20000000
+
 
 //USART BAUD rate setup
 #define BAUD 9600                                   // define baud
@@ -81,7 +83,7 @@ int main(void) {
         //_delay_ms(1000);
         eeprom_update_byte (&number,0);
       }
-      if (changed_timer <= 120){
+      if (changed_timer <= 240){
         if (toggle == 0){ // left display (decimals)
           int8_t number_decimals = eeprom_read_byte(&number);
           decimals = number_decimals / 10;
