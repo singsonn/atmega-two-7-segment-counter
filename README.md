@@ -1,5 +1,7 @@
 # 0 to 99 counter with Atmega328p and 7 segment displays
 
+!0-99counter-atmega328p (atmega328p-0-99-counter-7-segment-breadboard.jpeg)
+
 Code for a 0 to 99 counter using an Atmega328p and two 7-segment displays, including push buttons to reset the counter, increment and decrement it.
 
 Check this video to see it in action: https://www.youtube.com/watch?v=xIt7RiY2nQ8
