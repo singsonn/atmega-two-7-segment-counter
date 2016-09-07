@@ -1,10 +1,11 @@
+#define F_CPU 20000000UL // speed on mcu crystal (20Mhz)
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/eeprom.h>
 #include <util/delay.h>
 #include <stdint.h>
+//#include <stdlib.h>
 
-#define F_CPU 20000000UL // speed on mcu crystal (20Mhz)
 #define FREQ 20000000
 
 
@@ -47,11 +48,11 @@ ISR(INT1_vect) {
 
 ISR(PCINT2_vect) {
   cli();
-  if( (PIND & (1 << PIND4)) == 1 ) {
-      eeprom_update_byte (&number,0);
+  if( (PIND & (1 << PD4)) == 1 ) {
   }
   else
   {
+    eeprom_update_byte (&number,0);
       /* HIGH to LOW pin change */
   }
   sei();
@@ -69,8 +70,8 @@ int main(void) {
   DDRC = 0b00111111; // Set PortC0-5 as output for a,b,c,d,e,f of 7 segment
   DDRD = (1<<DDD7); // Set dual 7 segment toggle pin PORTD7 as output pin
   DDRD &= ~(1<<PD4); // Set PD4 as input
-//  PORTD &= ~(1<<PD4);
-  PORTD |= (1<<PD4) // Enable pull-ups for PD4
+  PORTD &= ~(1<<PD4); // Tri state for PD4 (but pull down by input)
+//  PORTD |= (1<<PORTD4); // Enable internal pull ups
 
   PORTC = 0b00000000; // Initialize PORTC at 0 (no led ON)
   PORTB = 0b00000000; // Initialize PORTB at 0 (no led ON)
@@ -94,7 +95,7 @@ int main(void) {
 
   while(1){
     if (TCNT1 >= 20000){
-      if (changed_timer <= 240){
+      if (changed_timer <= 120){
         if (toggle == 0){ // left display (decimals)
           int8_t number_decimals = eeprom_read_byte(&number);
           decimals = number_decimals / 10;
@@ -226,20 +227,20 @@ void display_segment(int8_t segment) {
 
 // function to initialize UART
 void uart_init (void) {
-  UBRRH = (BAUDRATE>>8);                      // shift the register right by 8 bits
-  UBRRL = BAUDRATE;                           // set baud rate
-  UCSRB|= (1<<TXEN)|(1<<RXEN);                // enable receiver and transmitter
-  UCSRC|= (1<<URSEL)|(1<<UCSZ0)|(1<<UCSZ1);   // 8bit data format
+  UBRR0H = (BAUDRATE>>8);                      // shift the register right by 8 bits
+  UBRR0L = BAUDRATE;                           // set baud rate
+  UCSR0B|= (1<<TXEN0)|(1<<RXEN0);                // enable receiver and transmitter
+  UCSR0C|= (1<<UCSZ00)|(1<<UCSZ01);   // 8bit data format
 }
 
 // function to send data
 void uart_transmit (uint8_t data) {
-  while (!( UCSRA & (1<<UDRE)));                // wait while register is free
-  UDR = data;                                   // load data in the register
+  while (!( UCSR0A & (1<<UDRE0)));                // wait while register is free
+  UDR0 = data;                                   // load data in the register
 }
 
 // function to receive data
 uint8_t uart_receive (void) {
-  while(!(UCSRA) & (1<<RXC));                   // wait while data is being received
-  return UDR;                                   // return 8-bit data
+  while(!(UCSR0A) & (1<<RXC0));                   // wait while data is being received
+  return UDR0;                                   // return 8-bit data
 }
