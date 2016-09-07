@@ -8,7 +8,7 @@ Check this video to see it in action: https://www.youtube.com/watch?v=xIt7RiY2nQ
 
 ### Prerequisites
 
-*Schematics of the circuit to be provided at a later time.*
+*PDF for the schematics of the circuit is available, see `atmega-two-7-segment-counter.pdf`*
 
 Parts needed:
 
@@ -36,6 +36,8 @@ Parts needed:
 All work was done on a Mac. Check here for easy steps to install `avr-gcc` and `avrdude` tools on your Mac: http://maxembedded.com/2015/06/setting-up-avr-gcc-toolchain-on-linux-and-mac-os-x/
 
 I deployed it using a USBASP ISP programmer. Check `file one-line-compile-program-OSX.txt` for one line command to compile and program it on your Atmega328p.
+
+*KiCad file for the schematics of the circuit are in the `atmega-7-segment-0-99-counter` folder*
 
 ## Authors
 
