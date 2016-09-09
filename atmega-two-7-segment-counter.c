@@ -56,18 +56,11 @@ void display_segment(int8_t segment);
 void uart_init (void);
 void uart_transmit (uint8_t data);
 uint8_t uart_receive (void);
+void interrupts_init(void);
+void timer_init(void);
+void ports_init(void);
 
 int main(void) {
-
-  DDRB |= (1 << DDB1); // Set portB1 as output for g of 7 segment
-  DDRC |= 0b00111111; // Set PortC0-5 as output for a,b,c,d,e,f of 7 segment
-  DDRD |= (1 << PD7); // Set dual 7 segment toggle pin PORTD7 as output pin
-  DDRD &= ~(1 << PD4); // Set PD4 as input
-  PORTD &= ~(1 << PORTD4); // Tri state for PD4 (but pull down by input)
-//  PORTD |= (1<<PORTD4); // Enable internal pull ups
-
-  PORTC |= 0b00000000; // Initialize PORTC at 0 (no led ON)
-  PORTB |= 0b00000000; // Initialize PORTB at 0 (no led ON)
 
   uint8_t toggle = 0;
   int16_t circle_delay =0;
@@ -76,13 +69,9 @@ int main(void) {
   int8_t decimals = 0;
   int8_t units = 0;
 
-  EICRA |= (1 << ISC00) | (1 << ISC01) | (1 << ISC11) | (1 << ISC10);    // set INT0 to trigger on RISING EDGE logic change
-  EIMSK |= (1 << INT0) | (1 << INT1);     // Turns on INT0 & INT1
-
-  PCICR |= (1 << PCIE2);   // set PCIE2 to enable PCMSK2 scan
-  PCMSK2 |= (1 << PCINT20); // set PCINT20 to trigger an interrupt on state change
-
-  TCCR1B |= (1 << CS11); // Set up timer with prescaler Fcpu/8
+  interrupts_init();
+  timer_init();
+  ports_init();
 
   sei();				//Enable Global Interrupt
 
@@ -236,4 +225,26 @@ void uart_transmit (uint8_t data) {
 uint8_t uart_receive (void) {
   while(!(UCSR0A) & (1<<RXC0));                   // wait while data is being received
   return UDR0;                                   // return 8-bit data
+}
+
+void interrupts_init(void){
+  EICRA |= (1 << ISC00) | (1 << ISC01) | (1 << ISC11) | (1 << ISC10);    // set INT0 and INT1 to trigger on RISING EDGE logic change
+  EIMSK |= (1 << INT0) | (1 << INT1);     // Turns on INT0 & INT1
+  PCICR |= (1<<PCIE2);   // set PCIE2 to enable PCMSK2 scan
+  PCMSK2 |= (1<<PCINT20); // set PCINT20 to trigger an interrupt on state change
+}
+
+void timer_init(void){
+  TCCR1B |= (1 << CS11); // Set up timer with prescaler Fcpu/8
+}
+
+void ports_init(void){
+  DDRB = (1<<DDB1); // Set portB1 as output for g of 7 segment
+  DDRC = 0b00111111; // Set PortC0-5 as output for a,b,c,d,e,f of 7 segment
+  DDRD = (1<<DDD7); // Set dual 7 segment toggle pin PORTD7 as output pin
+  DDRD &= ~(1<<PD4); // Set PD4 as input
+  PORTD &= ~(1<<PD4); // Tri state for PD4 (but pull down by input)
+//  PORTD |= (1<<PORTD4); // Enable internal pull ups
+  PORTC = 0b00000000; // Initialize PORTC at 0 (no led ON)
+  PORTB = 0b00000000; // Initialize PORTB at 0 (no led ON)
 }
