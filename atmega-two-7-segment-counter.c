@@ -46,9 +46,6 @@ ISR(PCINT2_vect) {
   if(PIND & (1 << PD4)) {
     eeprom_update_byte (&number,0);
   }
-  else
-  {
-  }
 }
 
 void display_digit(int8_t digit);
