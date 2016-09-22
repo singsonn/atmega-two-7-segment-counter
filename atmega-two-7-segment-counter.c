@@ -4,14 +4,15 @@
 #include <avr/eeprom.h>
 #include <util/delay.h>
 #include <stdint.h>
-//#include <stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 //#define FREQ 20000000
 
 
 //USART BAUD rate setup
 #define BAUD 9600                                   // define baud
-#define BAUDRATE ((F_CPU)/(BAUD*16UL)-1)            // set baud rate value for UBRR
+#define BAUDRATE ((F_CPU)/(BAUD*20UL)-1)            // set baud rate value for UBRR
 
 int8_t EEMEM number = 0;
 
@@ -27,6 +28,7 @@ ISR(INT0_vect) {
     number_int0 = 0;
   }
   eeprom_update_byte (&number,number_int0);
+  printf("U");
   changed_timer = 0;
 }
 
@@ -39,6 +41,7 @@ ISR(INT1_vect) {
     number_int1 = 99;
   }
   eeprom_update_byte (&number,number_int1);
+  printf("D");
   changed_timer = 0;
 }
 
@@ -51,11 +54,18 @@ ISR(PCINT2_vect) {
 void display_digit(int8_t digit);
 void display_segment(int8_t segment);
 void uart_init (void);
-void uart_transmit (uint8_t data);
-uint8_t uart_receive (void);
+void uart_transmit (uint8_t data, FILE *stream);
+uint8_t uart_receive (FILE *stream);
 void interrupts_init(void);
 void timer_init(void);
 void ports_init(void);
+int main(void);
+
+FILE uart_output = FDEV_SETUP_STREAM(uart_transmit, NULL, _FDEV_SETUP_WRITE);
+FILE uart_input = FDEV_SETUP_STREAM(NULL, uart_receive, _FDEV_SETUP_READ);
+
+//FILE uart_io FDEV_SETUP_STREAM(uart_transmit, uart_receive, _FDEV_SETUP_RW);
+
 
 int main(void) {
 
@@ -69,6 +79,9 @@ int main(void) {
   interrupts_init();
   timer_init();
   ports_init();
+  uart_init();
+  stdout = &uart_output;
+  stdin  = &uart_input;
 
   sei();				//Enable Global Interrupt
 
@@ -213,13 +226,18 @@ void uart_init (void) {
 }
 
 // function to send data
-void uart_transmit (uint8_t data) {
+//void uart_transmit (uint8_t data) {
+void uart_transmit (uint8_t data, FILE *stream) {
+  if (data == '\n') {
+    uart_transmit('\r', stream);
+  }
   while (!( UCSR0A & (1<<UDRE0)));                // wait while register is free
   UDR0 = data;                                   // load data in the register
 }
 
 // function to receive data
-uint8_t uart_receive (void) {
+//uint8_t uart_receive (void) {
+uint8_t uart_receive (FILE *stream) {
   while(!(UCSR0A) & (1<<RXC0));                   // wait while data is being received
   return UDR0;                                   // return 8-bit data
 }
