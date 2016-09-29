@@ -9,12 +9,23 @@
 
 //#define FREQ 20000000
 
+void display_digit(int8_t digit);
+void display_segment(int8_t segment);
+void uart_init(void);
+void uart_transmit(uint8_t data);
+uint8_t uart_receive(void);
+//void uart_transmit (uint8_t data, FILE *stream);
+//uint8_t uart_receive (FILE *stream);
+void interrupts_init(void);
+void timer_init(void);
+void ports_init(void);
+int main(void);
 
 //USART BAUD rate setup
 #define BAUD 9600                                   // define baud
-#define BAUDRATE ((F_CPU)/(BAUD*20UL)-1)            // set baud rate value for UBRR
+#define BAUDRATE ((F_CPU)/(BAUD*16UL)-1)            // set baud rate value for UBRR
 
-int8_t EEMEM number = 0;
+uint8_t EEMEM number = 0;
 
 //volatile int8_t units = 0;
 volatile int8_t changed_timer = 0;
@@ -22,26 +33,30 @@ volatile int8_t changed_timer = 0;
 //Interrupt Service Routine for INT0
 ISR(INT0_vect) {
 //  increase value +1;
-  int8_t number_int0 = eeprom_read_byte(&number);
+//  int8_t number_int0 = eeprom_read_byte(&number);
+  uint8_t number_int0 = eeprom_read_byte(&number);
   number_int0++;
   if (number_int0 > 99){
     number_int0 = 0;
   }
-  eeprom_update_byte (&number,number_int0);
-  printf("U");
+  eeprom_update_byte(&number,number_int0);
+  uart_transmit(number_int0);
+//  printf("U");
   changed_timer = 0;
 }
 
 //Interrupt Service Routine for INT1
 ISR(INT1_vect) {
 //  decrease value -1;
-  int8_t number_int1 = eeprom_read_byte(&number);
+//  int8_t number_int1 = eeprom_read_byte(&number);
+  uint8_t number_int1 = eeprom_read_byte(&number);
   number_int1--;
   if (number_int1 < 0){
     number_int1 = 99;
   }
-  eeprom_update_byte (&number,number_int1);
-  printf("D");
+  eeprom_update_byte(&number,number_int1);
+  uart_transmit(number_int1);
+//  printf("D");
   changed_timer = 0;
 }
 
@@ -51,18 +66,8 @@ ISR(PCINT2_vect) {
   }
 }
 
-void display_digit(int8_t digit);
-void display_segment(int8_t segment);
-void uart_init (void);
-void uart_transmit (uint8_t data, FILE *stream);
-uint8_t uart_receive (FILE *stream);
-void interrupts_init(void);
-void timer_init(void);
-void ports_init(void);
-int main(void);
-
-FILE uart_output = FDEV_SETUP_STREAM(uart_transmit, NULL, _FDEV_SETUP_WRITE);
-FILE uart_input = FDEV_SETUP_STREAM(NULL, uart_receive, _FDEV_SETUP_READ);
+//FILE uart_output = FDEV_SETUP_STREAM(uart_transmit, NULL, _FDEV_SETUP_WRITE);
+//FILE uart_input = FDEV_SETUP_STREAM(NULL, uart_receive, _FDEV_SETUP_READ);
 
 //FILE uart_io FDEV_SETUP_STREAM(uart_transmit, uart_receive, _FDEV_SETUP_RW);
 
@@ -80,8 +85,8 @@ int main(void) {
   timer_init();
   ports_init();
   uart_init();
-  stdout = &uart_output;
-  stdin  = &uart_input;
+//  stdout = &uart_output;
+//  stdin  = &uart_input;
 
   sei();				//Enable Global Interrupt
 
@@ -89,7 +94,7 @@ int main(void) {
     if (TCNT1 >= 20000){
       if (changed_timer <= 120){
         if (toggle == 0){ // left display (decimals)
-          int8_t number_decimals = eeprom_read_byte(&number);
+          uint8_t number_decimals = eeprom_read_byte(&number);
           decimals = number_decimals / 10;
           PORTD |= (1<<PORTD7);
           display_digit(decimals);
@@ -97,7 +102,7 @@ int main(void) {
           TCNT1 = 0;
           changed_timer++;
         }else{ // right display (units)
-          int8_t number_units = eeprom_read_byte(&number);
+          uint8_t number_units = eeprom_read_byte(&number);
           units = number_units % 10;
           PORTD &= ~(1<<PORTD7);
           display_digit(units);
@@ -226,18 +231,18 @@ void uart_init (void) {
 }
 
 // function to send data
-//void uart_transmit (uint8_t data) {
-void uart_transmit (uint8_t data, FILE *stream) {
-  if (data == '\n') {
-    uart_transmit('\r', stream);
-  }
+void uart_transmit (uint8_t data) {
+//void uart_transmit (uint8_t data, FILE *stream) {
+//  if (data == '\n') {
+//    uart_transmit('\r', stream);
+//  }
   while (!( UCSR0A & (1<<UDRE0)));                // wait while register is free
   UDR0 = data;                                   // load data in the register
 }
 
 // function to receive data
-//uint8_t uart_receive (void) {
-uint8_t uart_receive (FILE *stream) {
+uint8_t uart_receive (void) {
+//uint8_t uart_receive (FILE *stream) {
   while(!(UCSR0A) & (1<<RXC0));                   // wait while data is being received
   return UDR0;                                   // return 8-bit data
 }
